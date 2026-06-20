@@ -330,7 +330,17 @@ public class Table
         if (! compatible (table2)) return null;
 
         List <Comparable []> rows = new ArrayList <> ();
-        flaw ("minus", "not implemented yet");
+
+        for (var t : tuples) {
+            boolean found = false;
+            for (var u : table2.tuples) {
+                if (tupleCompare (t, u)) {
+                    found = true;
+                    break;
+                }
+            } // for
+            if (! found) rows.add (t);
+        } // for
 
         return new Table (name + count++, attribute, domain, key, rows);
     } // minus
@@ -391,12 +401,75 @@ public class Table
      */
     public Table join (Table table2)
     {
-        var rows = new ArrayList <Comparable []> ();
-        flaw ("join", "not implemented yet");
+        // Find common attributes
+        List <String> commonAttrs = new ArrayList <> ();
+        for (int i = 0; i < attribute.length; i++) {
+            for (int j = 0; j < table2.attribute.length; j++) {
+                if (attribute[i].equals (table2.attribute[j])) {
+                    commonAttrs.add (attribute[i]);
+                    break;
+                } // if
+            } // for
+        } // for
 
-        // FIX - eliminate duplicate columns
-        return new Table (name + count++, concat (attribute, table2.attribute),
-                                          concat (domain, table2.domain), key, rows);
+        // Build new attribute list (all from table 1 + non-common from table2)
+        List <String> newAttrs = new ArrayList <> ();
+        for (String attr : attribute) newAttrs.add (attr);
+        for (String attr : table2.attribute) {
+            if (!commonAttrs.contains (attr)) {
+                newAttrs.add (attr);
+            } // if
+        } // for
+
+        // Build new domain list
+        Class [] newDom = new Class [newAttrs.size ()];
+        for (int i = 0; i < attribute.length; i++) {
+            newDom[i] = domain[i];
+        } // for
+        int idx = attribute.length;
+        for (String attr : table2.attribute) {
+            if (!commonAttrs.contains (attr)) {
+                int col2 = table2.col.get (attr);
+                newDom[idx++] = table2.domain[col2];
+            } // if
+        } // for
+
+        // Match and combine tuples
+        List <Comparable []> rows = new ArrayList <> ();
+        for (var t : tuples) {
+            for (var u : table2.tuples) {
+                // Check if common attributes match
+                boolean match = true;
+                for (var commonAttr : commonAttrs) {
+                    int colT = col.get (commonAttr);
+                    int colU = table2.col.get (commonAttr);
+                    if (!t[colT].equals (u[colU])) {
+                        match = false;
+                        break;
+                    } // if
+                } // for
+
+                if (match) {
+                    // Combine tuples
+                    Comparable [] combined = new Comparable [newAttrs.size ()];
+                    // Copy all from t
+                    for (int i = 0; i < t.length; i++) {
+                        combined[i] = t[i];
+                    } // for
+                    // Copy non-common from u
+                    int destIdx = t.length;
+                    for (var attr : table2.attribute) {
+                        if (!commonAttrs.contains (attr)) {
+                            int colU = table2.col.get (attr);
+                            combined[destIdx++] = u[colU];
+                        } // if
+                    } // for
+                    rows.add (combined);
+                } // if
+            } // for
+        } // for
+
+        return new Table (name + count++, newAttrs.toArray (new String [0]), newDom, key, rows);
     } // join
 
     /************************************************************************************
