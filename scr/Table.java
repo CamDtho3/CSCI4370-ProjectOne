@@ -274,9 +274,15 @@ public class Table
      */
     public Table sel (KeyType keyVal)
     {
-        List <Comparable []> rows = new ArrayList <> ();
-        flaw ("sel", "indexed select not implemented yet");
-        return new Table (name + count++, attribute, domain, key, rows);
+       List <Comparable []> rows = new ArrayList <> ();
+
+       Comparable[] tuple = index.get(keyVal);
+
+       if (tuple != null) {
+                  rows.add(tuple);
+           }
+       
+       return new Table (name + count++, attribute, domain, key, rows);
     } // selt
 
     /************************************************************************************
