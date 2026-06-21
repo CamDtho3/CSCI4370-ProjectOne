@@ -293,8 +293,37 @@ public class Table
         if (! compatible (table2)) return null;
 
         List <Comparable []> rows = new ArrayList <> ();
-        flaw ("union", "not implemented yet");
+        Map <KeyType, Comparable []> tempIndex = makeMap ();
 
+        for (Comparable [] t : tuples) {
+            Comparable [] keyVal = new Comparable [key.length];
+
+            for (int i = 0; i < key.length; i++) {
+                keyVal [i] = t [col.get (key [i])];
+            }
+
+            KeyType k = new KeyType (keyVal);
+
+            if (! tempIndex.containsKey (k)) {
+                rows.add (t);
+                tempIndex.put (k, t);
+            }
+        }
+
+        for (Comparable [] t : table2.tuples) {
+            Comparable [] keyVal = new Comparable [key.length];
+
+            for (int i = 0; i < key.length; i++) {
+                keyVal [i] = t [col.get (key [i])];
+            }
+
+            KeyType k = new KeyType (keyVal);
+
+            if (! tempIndex.containsKey (k)) {
+                rows.add (t);
+                tempIndex.put (k, t);
+            }
+        }
         return new Table (name + count++, attribute, domain, key, rows);
     } // union
 
@@ -486,7 +515,21 @@ public class Table
     public Table join (Table table2, String fkey)
     {
         var rows = new ArrayList <Comparable []> ();
-        flaw ("join", "indexed join equating fkey = " + fkey + " to key = " + table2.key + " + not implemented yet");
+        String [] fkeyAttrs = fkey.split (" ");
+
+        for (Comparable [] t : tuples) {
+            Comparable [] fkeyVal = new Comparable [table2.key.length];
+
+            for (int i = 0; i < table2.key.length; i++) {
+                fkeyVal [i] = t [col.get (fkeyAttrs [i])];
+            }
+
+            Comparable [] match = table2.index.get (new KeyType (fkeyVal));
+
+            if (match != null) {
+                rows.add (concat (t, match));
+            }
+        }
 
         return new Table (name + count++, concat (attribute, table2.attribute),
                                           concat (domain, table2.domain), key, rows);
