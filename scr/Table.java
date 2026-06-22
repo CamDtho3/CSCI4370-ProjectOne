@@ -259,8 +259,32 @@ public class Table
      */
     private boolean satisfies (Comparable [] t, int colNo, String op, String value)
     {
-        flaw ("satisfies", "not implemented yet");
-        return false;
+       Comparable tupleVal = t[colNo];
+       Comparable compareVal;
+
+       if (tupleVal instanceof Integer) {
+              compareVal = Integer.valueOf(value);
+       } else if (tupleVal instanceof Long) {
+              compareVal = Long.valueOf(value);
+       } else if (tupleVal instanceof Double) {
+              compareVal = Double.valueOf(value);
+       } else if (tupleVal instanceof Float) {
+              compareVal = Float.valueOf(value);
+       } else {
+              compareVal = value.replace(" ' ", " ");
+       }
+
+       int cmp = tupleVal.compareTo(compareVal);
+
+       switch(op) {
+              case "==": return cmp == 0;
+              case "!=": return cmp != 0;
+              case "<": return cmp < 0;
+              case ">": return cmp > 0;
+              case "<=": return cmp <= 0;
+              case ">=": return cmp >= 0;
+              default: return false;
+       }
     } // satisfies
 
     /************************************************************************************
