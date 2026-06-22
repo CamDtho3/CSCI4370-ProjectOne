@@ -166,8 +166,20 @@ public class Table
      */
     public Table add (Comparable [] tup)
     {
-         flaw ("add", "type checking not implemented yet");
-         tuples.add (tup);
+         if (tup.length != attribute.length ) {
+             flaw("add", "The arity of the input tuple does not match the arity of the table");
+             return this;
+         }
+
+        for (int i = 0; i < domain.length; i++) {
+            Class domainClass = domain[i];
+            if (!(domainClass.isInstance(tup[i]))){
+                flaw("add", String.format("The %s-th entry in the tuple is not in the domain", i));
+                return this;
+            }
+         }
+
+         tuples.add(tup);
          return this;
     } // add
 
@@ -188,7 +200,14 @@ public class Table
         var newKey = (Arrays.asList (attrs).containsAll (Arrays.asList (key))) ? key : attrs;
 
         List <Comparable []> rows = new ArrayList <> ();
-        flaw ("proj", "not implemented yet");
+
+        for (Comparable[] row : tuples) {
+            Comparable[] newRow = new Comparable[attrs.length];
+            for (int i = 0; i < attrs.length; i++) {
+                newRow[i] = row[col.get(attrs[i])];
+            }
+            rows.add(newRow);
+        }
 
         return new Table (name + count++, attrs, newDom, newKey, rows);
     } // proj
@@ -196,7 +215,7 @@ public class Table
     /************************************************************************************
      * Get the domains corresponding the given attributes.
      *
-     * @param attrs_  the attributes to project onto
+     * @param attrs_ the attributes to project onto
      * @return  the corresponding domains
      */
     private Class [] getDom (String [] attrs)
@@ -271,8 +290,9 @@ public class Table
        } else if (tupleVal instanceof Float) {
               compareVal = Float.valueOf(value);
        } else {
-              compareVal = value.replace(" ' ", " ");
+              compareVal = value.replace("'", "");
        }
+
 
        int cmp = tupleVal.compareTo(compareVal);
 
@@ -583,10 +603,10 @@ public class Table
             Comparable [] fkeyVal = new Comparable [table2.key.length];
 
             for (int i = 0; i < table2.key.length; i++) {
-                fkeyVal [i] = t [col.get (fkeyAttrs [i])];
+                fkeyVal [i] = t [col.get(fkeyAttrs[i])];
             }
 
-            Comparable [] match = table2.index.get (new KeyType (fkeyVal));
+            Comparable [] match = table2.index.get(new KeyType (fkeyVal));
 
             if (match != null) {
                 rows.add (concat (t, match));
