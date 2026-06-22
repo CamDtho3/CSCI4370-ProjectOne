@@ -392,7 +392,21 @@ public class Table
         var t_attrs = attributes1.split (" ");
         var u_attrs = attributes2.split (" ");
         var rows    = new ArrayList <Comparable []> ();
-        flaw ("join", "not implemented yet");
+        for (var t : this.tuples) {
+            for (var u : table2.tuples) {
+                boolean match = true;
+                for (int i = 0; i < t_attrs.length; i++) {
+                    var tVal = t[this.col.get(t_attrs[i])];
+                    var uVal = u[table2.col.get(u_attrs[i])];
+                    if (!tVal.equals(uVal)) {
+                        match = false;                       
+                    }
+                }
+                if (match) {
+                    rows.add(concat(t,u));
+                }
+            }
+        }
         
         return new Table (name + count++, concat (attribute, table2.attribute),
                                           concat (domain, table2.domain), key, rows);
@@ -412,8 +426,26 @@ public class Table
     public Table join (String condition, Table table2)
     {   
         var rows = new ArrayList <Comparable []> ();
-        flaw ("join", "not implemented yet");
-        
+        String[] args = condition.split(" ");
+        for (var t : this.tuples) {
+            for (var u : table2.tuples) {
+                var tVal = t[this.col.get(args[0])];
+                var uVal = u[table2.col.get(args[2])];
+
+                boolean match = switch (args[1]) {
+                    case "==" -> tVal.compareTo(uVal) == 0;
+                    case "!=" -> tVal.compareTo(uVal) != 0;
+                    case "<" -> tVal.compareTo(uVal) < 0;
+                    case "<=" -> tVal.compareTo(uVal) <= 0;
+                    case ">" -> tVal.compareTo(uVal) > 0;
+                    case ">=" -> tVal.compareTo(uVal) >= 0;
+                    default -> false;
+                };
+
+                if (match) rows.add(concat(t,u));
+            }
+        }        
+                
         return new Table (name + count++, concat (attribute, table2.attribute),
                                           concat (domain, table2.domain), key, rows);
     } // join
